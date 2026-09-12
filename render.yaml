@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: bookwise-api
+    runtime: docker
+    dockerfilePath: Dockerfile
+    plan: starter
+    region: oregon
+    envVars:
+      - key: DB_PATH
+        value: /data/books.db
+      - key: ALLOWED_ORIGINS
+        value: "*"
+    disk:
+      name: bookwise-db
+      mountPath: /data
+      sizeGB: 10

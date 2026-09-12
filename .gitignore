@@ -1,0 +1,30 @@
+# Database & Processed Data (Exceeds GitHub 100MB file limit)
+data/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Node & Frontend
+node_modules/
+dist/
+dist-ssr/
+.vercel/
+.env
+.env.production
+*.local
+
+# Environment & Logs
+*.log
+logs/
+.DS_Store
+.idea/
+.vscode/

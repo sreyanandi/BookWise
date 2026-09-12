@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* Color palette matched to the reference dashboard screenshot */
+@theme {
+  --color-ink: #2b2222;                 /* main text */
+  --color-ink-muted: #9c9092;           /* secondary/gray text */
+  --color-maroon: #5c1a16;              /* outer page background + logo mark */
+  --color-maroon-panel: #3c1210;        /* right-hand detail panel background */
+  --color-maroon-panel-soft: #55211d;   /* divider lines inside the dark panel */
+  --color-card: #ffffff;                /* white cards / sidebar */
+  --color-cream: #f6f1ec;               /* soft warm background (hero, search bar, avatar) */
+  --color-line: #ece4e1;                /* light borders */
+  --color-accent: #de8a3e;              /* Show latest / Read buttons */
+  --color-accent-dark: #c97a32;         /* button hover */
+  --color-gold: #f0a92a;                /* rating stars */
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-maroon);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+img {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 999px;
+}
