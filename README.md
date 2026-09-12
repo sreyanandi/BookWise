@@ -1,4 +1,4 @@
-# BooksWise — ML Book Recommendation Dashboard
+# BookWise — ML Book Recommendation Dashboard
 
 A book recommendation app styled after a maroon/white dashboard design,
 backed by a hybrid local ML recommender AND a live connection to Open
