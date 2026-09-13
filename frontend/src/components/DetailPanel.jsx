@@ -51,7 +51,7 @@ export default function DetailPanel({ book, reason, isFavorite, onToggleFavorite
     : null;
 
   return (
-    <div className="h-full flex flex-col px-5 sm:px-7 py-6 sm:py-8 text-white relative animate-fade-in">
+    <div className="h-full flex flex-col px-7 py-8 text-white relative animate-fade-in">
       <div className="flex items-start justify-between gap-2">
         <h2 className="font-display font-semibold text-sm leading-snug">
           {book.title}

@@ -263,12 +263,3 @@ def get_recommendations(
         "recommendations": [_format_api_book(r) for r in recs],
     }
 
-
-# Mount built frontend assets so API and Web UI run together seamlessly
-from fastapi.staticfiles import StaticFiles
-
-frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
-if os.path.exists(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-
-

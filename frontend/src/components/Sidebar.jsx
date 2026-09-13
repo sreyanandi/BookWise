@@ -19,22 +19,17 @@ const SUB_LINKS = [
   { label: "Help", icon: HelpCircle },
 ];
 
-export default function Sidebar({ active, onSelect, onCloseMobileMenu }) {
-  function handleSelect(label) {
-    onSelect(label);
-    if (onCloseMobileMenu) onCloseMobileMenu();
-  }
-
+export default function Sidebar({ active, onSelect }) {
   return (
-    <aside className="flex flex-col justify-between h-full px-5 py-6 bg-card">
+    <aside className="flex flex-col justify-between h-full px-5 py-6">
       <nav className="flex flex-col gap-1">
         {MAIN_LINKS.map(({ label, icon: Icon }) => {
           const isActive = label === active;
           return (
             <button
               key={label}
-              onClick={() => handleSelect(label)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors cursor-pointer ${
+              onClick={() => onSelect(label)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
                 isActive
                   ? "text-maroon font-semibold bg-maroon/[0.06]"
                   : "text-ink-muted hover:text-ink"
@@ -51,8 +46,8 @@ export default function Sidebar({ active, onSelect, onCloseMobileMenu }) {
         {SUB_LINKS.map(({ label, icon: Icon }) => (
           <button
             key={label}
-            onClick={() => handleSelect(label)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors cursor-pointer"
+            onClick={() => onSelect(label)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors"
           >
             <Icon size={17} />
             {label}
@@ -61,8 +56,8 @@ export default function Sidebar({ active, onSelect, onCloseMobileMenu }) {
       </nav>
 
       <button
-        onClick={() => handleSelect("Log Out")}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors cursor-pointer"
+        onClick={() => onSelect("Log Out")}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors"
       >
         <LogOut size={17} />
         Log Out

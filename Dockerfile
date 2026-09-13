@@ -1,20 +1,12 @@
-# Step 1: Build Frontend
-FROM node:20-slim AS frontend-builder
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
-
-# Step 2: Build Python Backend & Bundle Frontend Static Assets
 FROM python:3.11-slim
 
+# Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     sqlite3 \
     && rm -rf /var/lib/apt/lists/*
@@ -23,14 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY api/requirements.txt /app/api/requirements.txt
 RUN pip install --no-cache-dir -r /app/api/requirements.txt
 
-# Copy ML engine and API code
+# Copy ML recommendation engine and API code
 COPY ml/recommend.py /app/ml/recommend.py
 COPY api/main.py /app/api/main.py
 
-# Copy prebuilt frontend static files into /app/frontend/dist
-COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
-
-# Default database path (can be overridden via volume mount or ENV)
+# Default location for persistent database volume
 ENV DB_PATH=/data/books.db
 WORKDIR /app/api
 
