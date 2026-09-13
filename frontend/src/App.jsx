@@ -74,6 +74,7 @@ export default function App() {
   const [status, setStatus] = useState("loading");
   const [notFoundQuery, setNotFoundQuery] = useState(null);
   const [isShowingLatest, setIsShowingLatest] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(36);
 
   const [favorites, setFavorites] = useState([]);
   const [history, setHistory] = useState([]);
@@ -88,7 +89,7 @@ export default function App() {
   // When opening the website, show all books by default
   useEffect(() => {
     setStatus("loading");
-    getPopular(36)
+    getPopular(5000)
       .then((books) => {
         const list = books || [];
         setAllBooks(list);
@@ -147,6 +148,7 @@ export default function App() {
     setQuery("");
     setRecommended([]);
     setIsShowingLatest(false);
+    setVisibleCount(36);
   }
 
   function handleEnter() {
@@ -157,8 +159,9 @@ export default function App() {
     setStatus("loading");
     setIsShowingLatest(true);
     setSelectedBook(null);
+    setVisibleCount(36);
     try {
-      const latestBooks = await getLatest(36);
+      const latestBooks = await getLatest(500);
       setAllBooks(latestBooks || []);
       setPopular((latestBooks || []).slice(0, 16));
       setStatus("done");
@@ -315,17 +318,30 @@ export default function App() {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {(selectedBook ? recommended : allBooks).map((book) => (
-                    <RecommendedCard
-                      key={book.book_id}
-                      book={book}
-                      onClick={() => selectBook(book.title)}
-                      isFavorite={favorites.some((f) => f.book_id === book.book_id)}
-                      onToggleFavorite={() => handleToggleFavorite(book)}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {(selectedBook ? recommended : allBooks.slice(0, visibleCount)).map((book) => (
+                      <RecommendedCard
+                        key={book.book_id}
+                        book={book}
+                        onClick={() => selectBook(book.title)}
+                        isFavorite={favorites.some((f) => f.book_id === book.book_id)}
+                        onToggleFavorite={() => handleToggleFavorite(book)}
+                      />
+                    ))}
+                  </div>
+
+                  {!selectedBook && visibleCount < allBooks.length && (
+                    <div className="flex flex-col items-center justify-center pt-6 pb-2">
+                      <button
+                        onClick={() => setVisibleCount((prev) => prev + 36)}
+                        className="text-sm font-medium px-8 py-2.5 rounded-full border border-line bg-card text-ink hover:border-accent hover:text-accent transition-all cursor-pointer shadow-xs"
+                      >
+                        Load more books ({allBooks.length - visibleCount} more available)
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </section>
 
