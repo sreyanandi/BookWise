@@ -38,7 +38,7 @@ async function resolveBook(title) {
 async function loadDetailsFor(book) {
   let recs = [];
   try {
-    const res = await getRecommendations(book.title, RECOMMEND_COUNT);
+    const res = await getRecommendations(book, RECOMMEND_COUNT);
     recs = res?.recommendations || [];
   } catch {
     const topSubject = (book.genres || "fiction").split(" ")[0];
@@ -294,11 +294,6 @@ export default function App() {
                       Readers who liked this also enjoyed
                     </span>
                   )}
-                  {!selectedBook && !isShowingLatest && (
-                    <span className="text-[11px] font-medium text-ink-muted bg-cream px-2.5 py-0.5 rounded-full">
-                      Worldwide Catalog (2.8M+ Books)
-                    </span>
-                  )}
                   {status === "loading" && (
                     <span className="inline-flex items-center gap-1.5 text-xs text-accent font-medium bg-cream px-2.5 py-0.5 rounded-full animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
@@ -319,6 +314,11 @@ export default function App() {
                 </div>
               ) : (
                 <>
+                  {selectedBook && recommended.length === 0 && (
+                    <div className="border border-dashed border-line rounded-2xl py-14 text-center text-ink-muted text-sm">
+                      No directly similar books found in the catalog for this title yet.
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {(selectedBook ? recommended : allBooks.slice(0, visibleCount)).map((book) => (
                       <RecommendedCard
