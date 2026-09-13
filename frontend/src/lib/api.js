@@ -156,12 +156,17 @@ export async function getPersonalized(genres = null, vibe = null, n = 30) {
 export async function getLatest(n = 30, genre = null) {
   if (BASE_URL) {
     try {
-      return await fetchWithTimeout(`${BASE_URL}/latest?n=${n}`);
+      return await fetchWithTimeout(`${BASE_URL}/latest?n=${n}${genre ? `&genre=${encodeURIComponent(genre)}` : ""}`);
     } catch {}
   }
 
-  const recent = catalog.filter((b) => b.year && b.year >= 2012).slice(0, n);
-  return recent.length > 0 ? recent : catalog.slice(0, n);
+  // Filter 2024-2026 releases in catalog
+  let latest = catalog.filter((b) => b.year && b.year >= 2024 && b.year <= 2026);
+  if (genre && genre !== "all") {
+    const g = norm(genre);
+    latest = latest.filter((b) => norm(b.genres).includes(g));
+  }
+  return latest.slice(0, n);
 }
 
 export async function searchByDescription(text, n = 10) {
