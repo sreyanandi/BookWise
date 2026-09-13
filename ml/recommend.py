@@ -169,12 +169,30 @@ def _series_key(title):
     return t_lower
 
 
+FTS_STOPWORDS = {
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'you', 'your', 'yours', 'he', 'him', 'his',
+    'she', 'her', 'hers', 'it', 'its', 'they', 'them', 'their', 'theirs', 'what', 'which', 'who',
+    'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been',
+    'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and',
+    'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about',
+    'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to',
+    'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then',
+    'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few',
+    'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
+    'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now', 'd', 'll', 'm',
+    'o', 're', 've', 'y', 'want', 'like', 'book', 'books', 'story', 'stories', 'novel', 'read', 'reading',
+    'looking', 'something', 'two', 'people'
+}
+
+
 def sanitize_fts_query(query):
     cleaned = re.sub(r'[^\w\s]', ' ', query)
-    tokens = [t.strip() for t in cleaned.split() if t.strip()]
-    if not tokens:
+    tokens = [t.strip().lower() for t in cleaned.split() if t.strip()]
+    meaningful = [t for t in tokens if len(t) >= 3 and t not in FTS_STOPWORDS]
+    target_tokens = meaningful if meaningful else [t for t in tokens if len(t) >= 2]
+    if not target_tokens:
         return ""
-    return " OR ".join(tokens)
+    return " OR ".join(target_tokens)
 
 
 def find_book(query, limit=1):
@@ -285,26 +303,6 @@ def query_books_catalog(genre_filter=None, year_min=None, year_max=None, languag
         exec_params = list(params) + [fetch_limit, int(offset)]
         c.execute(sql, exec_params)
         rows = c.fetchall()
-        
-        # If strict genre filter returned fewer than 4 books, fallback to all books in that language
-        if len(rows) < 4 and genre_clauses:
-            fallback_where = ["bl.language = ?"]
-            fallback_params = [lang_key]
-            if year_min is not None:
-                fallback_where.append("bl.publication_year >= ?")
-                fallback_params.append(int(year_min))
-            if year_max is not None:
-                fallback_where.append("bl.publication_year <= ?")
-                fallback_params.append(int(year_max))
-            fallback_sql = f"""
-                SELECT b.* FROM book_languages bl
-                JOIN books b ON bl.book_id = b.book_id
-                WHERE {' AND '.join(fallback_where)}
-                ORDER BY bl.ratings_count DESC
-                LIMIT ? OFFSET ?
-            """
-            c.execute(fallback_sql, fallback_params + [fetch_limit, int(offset)])
-            rows = c.fetchall()
     else:
         where_clauses = []
         params = []

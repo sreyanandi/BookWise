@@ -235,8 +235,7 @@ def mood_recommend(
     soup = MOOD_SOUPS.get(mood.lower(), mood)
     results = search_by_text(soup, n=n)
     if not results:
-        # Fallback to popular books if FTS returns no matches
-        results = get_popular(n=n)
+        return []
     return [_format_api_book(r) for r in results]
 
 

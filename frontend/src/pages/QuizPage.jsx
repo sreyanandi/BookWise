@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Compass, RotateCcw, ArrowRight, BookOpen } from "lucide-react";
-import { getPopular, getWorldwide } from "../lib/api";
+import { bookMatchesGenreTag } from "../lib/api";
+import catalog from "../data/catalog.json";
 import BookCover from "../components/BookCover";
 import StarRating from "../components/StarRating";
 
@@ -99,44 +100,128 @@ const GENRE_LABEL = {
   philosophy: "Philosophy & Thought", "self-help": "Personal Growth & Mindset", war: "War & Epic Conflict",
 };
 
-async function findMatch(genre) {
-  try {
-    let results = await getWorldwide(12, genre);
-    if (!results || results.length === 0) {
-      results = await getPopular(12, genre);
+const QUIZ_STOPWORDS = new Set([
+  "that", "this", "with", "from", "have", "more", "some", "than", "into", "book", "novel", "read",
+  "your", "where", "when", "what", "which", "their", "there", "about", "want", "like", "will", "just"
+]);
+
+function scoreCatalogForQuiz(answers) {
+  if (!answers || answers.length === 0) return { top: null, runnersUp: [] };
+
+  const genreWeights = {};
+  for (const ans of answers) {
+    for (const g of ans.genres || []) {
+      genreWeights[g] = (genreWeights[g] || 0) + 1;
     }
-    if (results && results.length > 0) {
-      // Pick top 3 distinct books
-      const shuffled = [...results].sort(() => 0.5 - Math.random());
-      return {
-        top: shuffled[0],
-        runnersUp: shuffled.slice(1, 3),
-      };
-    }
-  } catch {
-    /* fallback to popular */
   }
-  const fallback = await getPopular(10);
+
+  const optionKeywords = [];
+  for (const ans of answers) {
+    const words = String(ans.label || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 4 && !QUIZ_STOPWORDS.has(w));
+    optionKeywords.push(...words);
+  }
+
+  const q7Label = answers[6]?.label || "";
+
+  const scored = [];
+  const seenSeries = new Set();
+
+  function getSeriesKey(title) {
+    const clean = String(title || "").toLowerCase();
+    const match = clean.match(/\(([^,#]+)/);
+    if (match) return match[1].trim();
+    return clean.replace(/[^a-z0-9]/g, "").slice(0, 15);
+  }
+
+  for (const b of catalog) {
+    const bg = " " + String(b.genres || "").toLowerCase() + " ";
+    const title = String(b.title || "").toLowerCase();
+    const desc = String(b.description || "").toLowerCase();
+
+    let score = 0;
+    let genreHits = 0;
+
+    for (const [g, w] of Object.entries(genreWeights)) {
+      if (bookMatchesGenreTag(b.genres, g)) {
+        score += w * 16;
+        genreHits++;
+      }
+    }
+
+    if (genreHits === 0) continue;
+
+    for (const kw of optionKeywords) {
+      if (desc.includes(kw)) score += 5;
+      else if (title.includes(kw)) score += 6;
+      else if (bg.includes(kw)) score += 4;
+    }
+
+    const yr = Number(b.year);
+    if (q7Label.includes("Modern")) {
+      if (yr >= 2018) score += 20;
+      else if (yr >= 2010) score += 10;
+      else if (yr < 2000) score -= 20;
+    } else if (q7Label.includes("Historic")) {
+      if (bg.includes("historical") || bg.includes("classics")) score += 20;
+      if (yr && yr <= 1980) score += 15;
+    } else if (q7Label.includes("Far-future")) {
+      if (bg.includes("sci-fi") || bg.includes("science-fiction") || bg.includes("space")) score += 20;
+    } else if (q7Label.includes("Mythical")) {
+      if (bg.includes("fantasy") || bg.includes("mythology") || bg.includes("magic")) score += 20;
+    }
+
+    const lang = String(b.language || "english").toLowerCase();
+    if (lang === "english") score += 40;
+    else score -= 40;
+
+    const cnt = Number(b.ratings_count || 0);
+    if (cnt > 0) {
+      score += Math.min(10, Math.log10(cnt + 1) * 2);
+    }
+    score += Number(b.rating || 0);
+
+    scored.push({ book: b, score, series: getSeriesKey(b.title) });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const distinct = [];
+  for (const item of scored) {
+    if (item.series && seenSeries.has(item.series)) continue;
+    if (item.series) seenSeries.add(item.series);
+    distinct.push(item.book);
+    if (distinct.length >= 3) break;
+  }
+
   return {
-    top: fallback[0] || null,
-    runnersUp: fallback.slice(1, 3),
+    top: distinct[0] || null,
+    runnersUp: distinct.slice(1, 3),
   };
 }
 
 export default function QuizPage({ onSelectBook }) {
   const [step, setStep] = useState(-1); // -1 = intro
+  const [selectedAnswers, setSelectedAnswers] = useState([]);
   const [scores, setScores] = useState({});
   const [matchData, setMatchData] = useState(null);
   const [resultGenre, setResultGenre] = useState(null);
   const [loading, setLoading] = useState(false);
 
   function start() {
+    setSelectedAnswers([]);
     setScores({});
     setMatchData(null);
     setStep(0);
   }
 
   async function answer(option) {
+    const updatedAnswers = [...selectedAnswers, option];
+    setSelectedAnswers(updatedAnswers);
+
     const next = { ...scores };
     for (const g of option.genres) next[g] = (next[g] || 0) + 1;
     setScores(next);
@@ -146,14 +231,16 @@ export default function QuizPage({ onSelectBook }) {
       return;
     }
 
-    // Last question answered: tally and fetch the match.
+    // Last question answered: tally and compute deterministic match
     const sorted = Object.entries(next).sort((a, b) => b[1] - a[1]);
     const winner = sorted[0]?.[0] || "fantasy";
     setResultGenre(winner);
     setLoading(true);
     setStep(QUESTIONS.length); // results screen
-    const data = await findMatch(winner);
-    setMatchData(data);
+
+    // Direct deterministic matching based on user's answers
+    const match = scoreCatalogForQuiz(updatedAnswers);
+    setMatchData(match);
     setLoading(false);
   }
 

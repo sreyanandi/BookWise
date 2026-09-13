@@ -244,14 +244,58 @@ export async function getRecommendations(titleOrBook, n = 24, genre = null) {
   }
 }
 
+export function bookMatchesGenreTag(bookGenresStr, g) {
+  const bg = " " + norm(bookGenresStr) + " ";
+  const target = norm(g);
+  if (!target || target === "all") return true;
+
+  if (target === "science-fiction") {
+    return bg.includes("science-fiction") || bg.includes("sci-fi") || bg.includes("science fiction");
+  }
+  if (target === "non-fiction") {
+    return bg.includes("non-fiction") || bg.includes("nonfiction") || bg.includes("non fiction");
+  }
+  if (target === "graphic-novels") {
+    return bg.includes("graphic-novels") || bg.includes("graphic novels") || bg.includes("comics") || bg.includes("manga");
+  }
+  if (target === "short-stories") {
+    return bg.includes("short-stories") || bg.includes("short stories");
+  }
+  if (target === "historical-fiction") {
+    return bg.includes("historical-fiction") || bg.includes("historical fiction");
+  }
+  if (target === "literary-fiction") {
+    return bg.includes("literary-fiction") || bg.includes("literary fiction");
+  }
+  if (target === "young-adult") {
+    return bg.includes("young-adult") || bg.includes("young adult") || bg.includes(" ya ");
+  }
+  if (target === "self-help") {
+    return bg.includes("self-help") || bg.includes("self help");
+  }
+
+  const spaced = target.replace(/-/g, " ");
+  const re1 = new RegExp(`\\b${target}\\b`, "i");
+  const re2 = new RegExp(`\\b${spaced}\\b`, "i");
+  return re1.test(bookGenresStr) || re2.test(bookGenresStr);
+}
+
 export async function getPopular(n = 6, genre = null, yearMin = null, yearMax = null, language = null, offset = 0) {
+  const genreList = genre && genre !== "all"
+    ? String(genre).split(",").map((g) => norm(g).trim()).filter(Boolean)
+    : [];
+
   try {
     let url = `${BASE_URL}/popular?n=${n}&offset=${offset}`;
     if (genre) url += `&genre=${encodeURIComponent(genre)}`;
     if (yearMin) url += `&year_min=${yearMin}`;
     if (yearMax) url += `&year_max=${yearMax}`;
     if (language && language !== "all") url += `&language=${encodeURIComponent(language)}`;
-    return await fetchWithCache(url);
+    let res = await fetchWithCache(url);
+    if (Array.isArray(res) && genreList.length > 0) {
+      res = res.filter((b) => genreList.some((g) => bookMatchesGenreTag(b.genres, g)));
+    }
+    if (Array.isArray(res) && res.length > 0) return res;
   } catch {}
 
   let filtered = catalog;
@@ -261,18 +305,19 @@ export async function getPopular(n = 6, genre = null, yearMin = null, yearMax = 
     filtered = filtered.filter((b) => norm(b.language) === norm(language));
   }
 
-  // Genre filter
-  if (genre && genre !== "all") {
-    const genreList = String(genre).split(",").map((g) => norm(g).trim()).filter(Boolean);
-    if (genreList.length > 0) {
-      filtered = filtered.filter((b) => {
-        const bg = norm(b.genres);
-        return genreList.some((g) => {
-          const gSpaced = g.replace("-", " ");
-          return bg.includes(g) || bg.includes(gSpaced);
-        });
-      });
-    }
+  // Genre filter: STRICT MATCHING ONLY
+  if (genreList.length > 0) {
+    filtered = filtered
+      .map((b) => {
+        let matchCount = 0;
+        for (const g of genreList) {
+          if (bookMatchesGenreTag(b.genres, g)) matchCount++;
+        }
+        return { book: b, matchCount };
+      })
+      .filter((item) => item.matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount || Number(b.book.ratings_count || 0) - Number(a.book.ratings_count || 0))
+      .map((item) => item.book);
   }
 
   // Era filter
@@ -288,13 +333,21 @@ export async function getPopular(n = 6, genre = null, yearMin = null, yearMax = 
 }
 
 export async function getWorldwide(n = 24, genre = null, yearMin = null, yearMax = null, language = null, offset = 0) {
+  const genreList = genre && genre !== "all"
+    ? String(genre).split(",").map((g) => norm(g).trim()).filter(Boolean)
+    : [];
+
   try {
     let url = `${BASE_URL}/worldwide?n=${n}&offset=${offset}`;
     if (genre) url += `&genre=${encodeURIComponent(genre)}`;
     if (yearMin) url += `&year_min=${yearMin}`;
     if (yearMax) url += `&year_max=${yearMax}`;
     if (language && language !== "all") url += `&language=${encodeURIComponent(language)}`;
-    return await fetchWithCache(url);
+    let res = await fetchWithCache(url);
+    if (Array.isArray(res) && genreList.length > 0) {
+      res = res.filter((b) => genreList.some((g) => bookMatchesGenreTag(b.genres, g)));
+    }
+    if (Array.isArray(res) && res.length > 0) return res;
   } catch {}
 
   let filtered = catalog;
@@ -304,18 +357,19 @@ export async function getWorldwide(n = 24, genre = null, yearMin = null, yearMax
     filtered = filtered.filter((b) => norm(b.language) === norm(language));
   }
 
-  // Genre filter
-  if (genre && genre !== "all") {
-    const genreList = String(genre).split(",").map((g) => norm(g).trim()).filter(Boolean);
-    if (genreList.length > 0) {
-      filtered = filtered.filter((b) => {
-        const bg = norm(b.genres);
-        return genreList.some((g) => {
-          const gSpaced = g.replace("-", " ");
-          return bg.includes(g) || bg.includes(gSpaced);
-        });
-      });
-    }
+  // Genre filter: STRICT MATCHING ONLY
+  if (genreList.length > 0) {
+    filtered = filtered
+      .map((b) => {
+        let matchCount = 0;
+        for (const g of genreList) {
+          if (bookMatchesGenreTag(b.genres, g)) matchCount++;
+        }
+        return { book: b, matchCount };
+      })
+      .filter((item) => item.matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount || Number(b.book.ratings_count || 0) - Number(a.book.ratings_count || 0))
+      .map((item) => item.book);
   }
 
   // Era filter
@@ -340,7 +394,7 @@ export async function getPersonalized(genres = null, vibe = null, n = 30) {
 
   const targetGenres = genres ? genres.split(",").map(norm) : [];
   if (targetGenres.length > 0) {
-    const matched = catalog.filter((b) => targetGenres.some((g) => norm(b.genres).includes(g)));
+    const matched = catalog.filter((b) => targetGenres.some((g) => bookMatchesGenreTag(b.genres, g)));
     if (matched.length > 0) return matched.slice(0, n);
   }
 
@@ -357,55 +411,267 @@ export async function getLatest(n = 30, genre = null) {
   // Filter 2024-2026 releases in catalog
   let latest = catalog.filter((b) => b.year && b.year >= 2024 && b.year <= 2026);
   if (genre && genre !== "all") {
-    const g = norm(genre);
-    latest = latest.filter((b) => norm(b.genres).includes(g));
+    latest = latest.filter((b) => bookMatchesGenreTag(b.genres, genre));
   }
   return latest.slice(0, n);
 }
 
+const DESC_STOPWORDS = new Set([
+  "i", "me", "my", "we", "our", "you", "your", "he", "she", "it", "they", "them", "what",
+  "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were",
+  "be", "been", "being", "have", "has", "had", "do", "does", "did", "a", "an", "the", "and",
+  "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with",
+  "about", "into", "through", "before", "after", "to", "from", "in", "out", "on", "off",
+  "over", "under", "then", "when", "where", "why", "how", "all", "any", "both", "each",
+  "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same",
+  "so", "than", "too", "very", "can", "will", "just", "should", "now", "want", "like",
+  "book", "books", "story", "stories", "novel", "read", "reading", "looking", "something",
+  "two", "people", "someone"
+]);
+
+const INTENT_MAP = {
+  love: ["romance", "contemporary"],
+  romance: ["romance", "contemporary"],
+  "fall in love": ["romance", "contemporary"],
+  detective: ["mystery", "crime", "thriller"],
+  murder: ["mystery", "crime", "thriller"],
+  crime: ["crime", "mystery", "thriller"],
+  investigation: ["mystery", "thriller", "crime"],
+  magic: ["fantasy", "adventure"],
+  magical: ["fantasy", "adventure"],
+  powers: ["fantasy", "young-adult"],
+  hero: ["fantasy", "adventure", "young-adult"],
+  survivors: ["dystopian", "post-apocalyptic", "science-fiction"],
+  "world ends": ["dystopian", "post-apocalyptic", "science-fiction"],
+  apocalypse: ["dystopian", "post-apocalyptic", "science-fiction"],
+  rebuilding: ["dystopian", "historical-fiction"],
+  space: ["science-fiction"],
+  alien: ["science-fiction"],
+  scary: ["horror", "thriller"],
+  ghost: ["horror", "paranormal"],
+  haunted: ["horror", "paranormal"],
+  war: ["war", "historical-fiction"],
+  poetry: ["poetry"],
+  philosophy: ["philosophy"],
+  biography: ["biography", "memoir"],
+  motivational: ["self-help", "biography"],
+};
+
 export async function searchByDescription(text, n = 10) {
+  const q = norm(text);
+  if (!q) return [];
+
   try {
     const url = `${BASE_URL}/search_by_text?q=${encodeURIComponent(text)}&n=${n}`;
-    return await fetchWithCache(url);
+    const res = await fetchWithCache(url, 1500);
+    if (Array.isArray(res) && res.length > 0) return res;
   } catch {}
 
-  const terms = norm(text).split(/\s+/).filter((w) => w.length > 2);
-  const scored = catalog
-    .map((b) => {
-      const combined = `${norm(b.title)} ${norm(b.authors)} ${norm(b.genres)}`;
-      const score = terms.reduce((acc, term) => (combined.includes(term) ? acc + 1 : acc), 0);
-      return { book: b, score };
-    })
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((item) => item.book)
-    .slice(0, n);
+  const rawWords = q.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+  const keywords = rawWords.filter((w) => w.length >= 3 && !DESC_STOPWORDS.has(w));
 
-  if (scored.length > 0) return scored;
-  return catalog.slice(0, n);
+  const bonusGenres = new Set();
+  for (const [phrase, genres] of Object.entries(INTENT_MAP)) {
+    if (q.includes(phrase)) {
+      for (const g of genres) bonusGenres.add(g);
+    }
+  }
+
+  const scored = [];
+  const seenRoots = new Set();
+
+  for (const b of catalog) {
+    const title = norm(b.title);
+    const authors = norm(b.authors);
+    const genres = norm(b.genres);
+    const desc = norm(b.description || "");
+
+    let score = 0;
+    let matchedKw = 0;
+
+    for (const kw of keywords) {
+      if (desc.includes(kw)) {
+        score += 25;
+        matchedKw++;
+      } else if (title.includes(kw)) {
+        score += 35;
+        matchedKw++;
+      } else if (genres.includes(kw)) {
+        score += 20;
+        matchedKw++;
+      }
+    }
+
+    let genreMatches = 0;
+    for (const g of bonusGenres) {
+      if (genres.includes(g)) {
+        score += 25;
+        genreMatches++;
+      }
+    }
+
+    // Must match at least one keyword or strong intent tag
+    if (matchedKw === 0 && (bonusGenres.size === 0 || genreMatches === 0)) {
+      continue;
+    }
+
+    const cnt = Number(b.ratings_count || 0);
+    if (cnt > 0) {
+      score += Math.min(15, Math.log10(cnt + 1) * 2);
+    }
+    const rating = Number(b.rating || 0);
+    if (rating > 0) {
+      score += rating;
+    }
+
+    const lang = norm(b.language || "english");
+    if (lang === "english") {
+      score += 20;
+    } else {
+      score -= 20;
+    }
+
+    if (score > 0) {
+      const root = cleanRootTitle(b.title);
+      scored.push({ book: b, score, root });
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const results = [];
+  for (const item of scored) {
+    if (item.root && seenRoots.has(item.root)) continue;
+    if (item.root) seenRoots.add(item.root);
+    results.push(item.book);
+    if (results.length >= n) break;
+  }
+
+  return results;
 }
 
-const MOOD_MAP = {
-  happy: ["humor", "comedy", "ya", "adventure", "fun"],
-  sad: ["drama", "classics", "historical-fiction", "tragedy"],
-  romantic: ["romance", "contemporary", "love"],
-  curious: ["mystery", "thriller", "science", "non-fiction"],
-  adventurous: ["adventure", "fantasy", "magic", "quest"],
-  dark: ["horror", "thriller", "dark", "crime", "dystopian"],
-  peaceful: ["poetry", "classics", "philosophy", "gentle"],
-  motivated: ["biography", "memoir", "self-help", "nonfiction"],
+const MOOD_SPECS = {
+  happy: {
+    genres: ["humor", "comedy"],
+    keywords: ["humor", "comedy", "funny", "cheerful", "hilarious", "satire", "feel-good", "laughter", "witty", "fun"],
+    negatives: ["tragedy", "grief", "horror", "morbid", "depressing"]
+  },
+  sad: {
+    genres: ["drama"],
+    keywords: ["tragedy", "tragic", "grief", "mourning", "sorrow", "heartbreak", "heartbreaking", "loss", "tearjerker", "bittersweet", "melancholy", "sadness", "depressing", "dying"],
+    negatives: ["comedy", "hilarious", "laugh-out-loud"]
+  },
+  romantic: {
+    genres: ["romance"],
+    keywords: ["romance", "love", "romantic", "dating", "lovers", "relationship", "swoon", "heart", "kiss"],
+    negatives: ["horror", "gory", "brutal"]
+  },
+  curious: {
+    genres: ["mystery", "thriller", "science", "philosophy"],
+    keywords: ["puzzle", "investigation", "secrets", "conspiracy", "detective", "curiosity", "discovery", "clue", "uncover"],
+    negatives: []
+  },
+  adventurous: {
+    genres: ["adventure"],
+    keywords: ["adventure", "quest", "journey", "expedition", "voyage", "wilderness", "survival", "exploration"],
+    negatives: []
+  },
+  dark: {
+    genres: ["horror", "thriller", "crime"],
+    keywords: ["horror", "dark", "gothic", "macabre", "sinister", "disturbing", "eerie", "spooky", "dread", "twisted", "chilling"],
+    negatives: ["feel-good", "cheerful", "humor"]
+  },
+  peaceful: {
+    genres: ["poetry"],
+    keywords: ["peaceful", "calm", "gentle", "quiet", "nature", "zen", "tranquil", "meditative", "solitude"],
+    negatives: ["horror", "thriller", "crime", "violent", "war"]
+  },
+  motivated: {
+    genres: ["self-help", "biography", "memoir"],
+    keywords: ["motivational", "motivation", "inspiration", "inspiring", "success", "habits", "growth", "leadership", "resilience", "triumph"],
+    negatives: ["horror"]
+  }
 };
 
 export async function getMoodRecommendations(mood, n = 8) {
+  const mKey = norm(mood);
+  const spec = MOOD_SPECS[mKey];
+
+  // Try backend first if it's running
   try {
     const url = `${BASE_URL}/mood?mood=${encodeURIComponent(mood)}&n=${n}`;
-    return await fetchWithCache(url);
+    const res = await fetchWithCache(url, 1500);
+    if (Array.isArray(res) && res.length > 0) return res;
   } catch {}
 
-  const tags = MOOD_MAP[norm(mood)] || [norm(mood)];
-  const matched = catalog
-    .filter((b) => tags.some((t) => norm(b.genres).includes(t)))
-    .slice(0, n);
+  if (!spec) {
+    // If not a fixed mood key, treat it as a description search
+    return searchByDescription(mood, n);
+  }
 
-  return matched.length > 0 ? matched : catalog.slice(0, n);
+  const scored = [];
+  const seenRoots = new Set();
+
+  for (const b of catalog) {
+    const bg = " " + norm(b.genres) + " ";
+    const title = norm(b.title);
+    const desc = norm(b.description || "");
+    const combined = `${title} ${desc} ${bg}`;
+
+    let score = 0;
+    let hits = 0;
+
+    for (const g of spec.genres) {
+      if (bg.includes(g)) {
+        score += 30;
+        hits++;
+      }
+    }
+
+    for (const kw of spec.keywords) {
+      if (desc.includes(kw)) {
+        score += 15;
+        hits++;
+      } else if (title.includes(kw)) {
+        score += 20;
+        hits++;
+      } else if (bg.includes(kw)) {
+        score += 10;
+        hits++;
+      }
+    }
+
+    for (const neg of spec.negatives) {
+      if (combined.includes(neg)) {
+        score -= 40;
+      }
+    }
+
+    if (hits === 0 || score <= 0) continue;
+
+    const lang = norm(b.language || "english");
+    if (lang === "english") score += 20;
+    else score -= 20;
+
+    const cnt = Number(b.ratings_count || 0);
+    if (cnt > 0) {
+      score += Math.min(10, Math.log10(cnt + 1) * 2);
+    }
+    score += Number(b.rating || 0);
+
+    const root = cleanRootTitle(b.title);
+    scored.push({ book: b, score, root });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const results = [];
+  for (const item of scored) {
+    if (item.root && seenRoots.has(item.root)) continue;
+    if (item.root) seenRoots.add(item.root);
+    results.push(item.book);
+    if (results.length >= n) break;
+  }
+
+  return results;
 }
