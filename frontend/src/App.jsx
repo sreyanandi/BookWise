@@ -203,7 +203,7 @@ export default function App() {
   }
 
   return (
-    <div className={`h-screen w-screen bg-card grid ${selectedBook ? "grid-cols-[220px_1fr_360px]" : "grid-cols-[220px_1fr]"} grid-rows-[auto_1fr] overflow-hidden`}>
+    <div className={`min-w-[1280px] h-screen w-screen bg-card grid ${selectedBook ? "grid-cols-[220px_1fr_360px]" : "grid-cols-[220px_1fr]"} grid-rows-[auto_1fr] overflow-hidden`}>
       <div className="col-span-2 border-b border-line">
         <TopBar
           query={query}

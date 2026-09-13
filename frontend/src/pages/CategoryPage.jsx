@@ -89,7 +89,10 @@ export default function CategoryPage({ onSelectBook, favorites, onToggleFavorite
           0
         );
         if (isMounted) {
-          const newBatch = res || [];
+          let newBatch = res || [];
+          if (selectedLanguage && selectedLanguage !== "all") {
+            newBatch = newBatch.filter((b) => (b.language || "").toLowerCase() === selectedLanguage.toLowerCase());
+          }
           setBooks(newBatch);
           if (newBatch.length < PAGE_SIZE) {
             setHasMore(false);
@@ -127,7 +130,10 @@ export default function CategoryPage({ onSelectBook, favorites, onToggleFavorite
         selectedLanguage,
         books.length
       );
-      const newBatch = res || [];
+      let newBatch = res || [];
+      if (selectedLanguage && selectedLanguage !== "all") {
+        newBatch = newBatch.filter((b) => (b.language || "").toLowerCase() === selectedLanguage.toLowerCase());
+      }
       if (newBatch.length < PAGE_SIZE) {
         setHasMore(false);
       }

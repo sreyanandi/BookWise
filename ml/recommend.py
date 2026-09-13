@@ -137,6 +137,7 @@ def _format_book_row(row):
         "description": clean_desc,
         "similar_books": d.get("similar_books") or "[]",
         "source": d.get("source") or "ucsd",
+        "language": (r["language"] if hasattr(r, "keys") and "language" in r.keys() else d.get("language")) or "english",
     }
 
 

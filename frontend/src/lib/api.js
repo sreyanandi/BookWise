@@ -292,10 +292,15 @@ export async function getPopular(n = 6, genre = null, yearMin = null, yearMax = 
     if (yearMax) url += `&year_max=${yearMax}`;
     if (language && language !== "all") url += `&language=${encodeURIComponent(language)}`;
     let res = await fetchWithCache(url);
-    if (Array.isArray(res) && genreList.length > 0) {
-      res = res.filter((b) => genreList.some((g) => bookMatchesGenreTag(b.genres, g)));
+    if (Array.isArray(res)) {
+      if (language && language !== "all") {
+        res = res.filter((b) => norm(b.language) === norm(language));
+      }
+      if (genreList.length > 0) {
+        res = res.filter((b) => genreList.some((g) => bookMatchesGenreTag(b.genres, g)));
+      }
+      if (res.length > 0) return res;
     }
-    if (Array.isArray(res) && res.length > 0) return res;
   } catch {}
 
   let filtered = catalog;
@@ -344,10 +349,15 @@ export async function getWorldwide(n = 24, genre = null, yearMin = null, yearMax
     if (yearMax) url += `&year_max=${yearMax}`;
     if (language && language !== "all") url += `&language=${encodeURIComponent(language)}`;
     let res = await fetchWithCache(url);
-    if (Array.isArray(res) && genreList.length > 0) {
-      res = res.filter((b) => genreList.some((g) => bookMatchesGenreTag(b.genres, g)));
+    if (Array.isArray(res)) {
+      if (language && language !== "all") {
+        res = res.filter((b) => norm(b.language) === norm(language));
+      }
+      if (genreList.length > 0) {
+        res = res.filter((b) => genreList.some((g) => bookMatchesGenreTag(b.genres, g)));
+      }
+      if (res.length > 0) return res;
     }
-    if (Array.isArray(res) && res.length > 0) return res;
   } catch {}
 
   let filtered = catalog;

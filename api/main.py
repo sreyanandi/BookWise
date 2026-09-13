@@ -145,6 +145,7 @@ def _format_api_book(book):
         "blurb": blurb,
         "description": cleaned_desc or blurb,
         "source": book.get("source", "local"),
+        "language": book.get("language") or "english",
     }
 
 
