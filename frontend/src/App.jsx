@@ -79,6 +79,8 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [journey, setJourneyState] = useState({ currentlyReading: [], wantToRead: [], finished: [] });
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     setFavorites(getFavorites());
     setHistory(getHistory());
@@ -116,6 +118,7 @@ export default function App() {
 
   // When user clicks a particular book or searches for it
   const selectBook = useCallback(async (title) => {
+    setMobileMenuOpen(false);
     setStatus("loading");
     setNotFoundQuery(null);
     setIsShowingLatest(false);
@@ -183,6 +186,7 @@ export default function App() {
     setEntered(false);
     setActiveNav("Dashboard");
     setSelectedBook(null);
+    setMobileMenuOpen(false);
   }
 
   if (!entered) {
@@ -200,8 +204,12 @@ export default function App() {
   }
 
   return (
-    <div className={`h-screen w-screen bg-card grid ${selectedBook ? "grid-cols-[220px_1fr_360px]" : "grid-cols-[220px_1fr]"} grid-rows-[auto_1fr] overflow-hidden`}>
-      <div className="col-span-2 border-b border-line">
+    <div
+      className={`h-screen w-screen bg-card grid grid-cols-1 md:grid-cols-[220px_1fr] ${
+        selectedBook ? "lg:grid-cols-[220px_1fr_360px]" : ""
+      } grid-rows-[auto_1fr] overflow-hidden`}
+    >
+      <div className="col-span-full border-b border-line">
         <TopBar
           query={query}
           onQueryChange={setQuery}
@@ -209,29 +217,41 @@ export default function App() {
           userName={userName}
           onSaveName={handleSaveName}
           isLoading={status === "loading"}
+          onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
+          isMobileMenuOpen={mobileMenuOpen}
         />
       </div>
 
-      {selectedBook && (
-        <div className="row-span-2 bg-maroon-panel overflow-y-auto">
-          <DetailPanel
-            book={selectedBook}
-            reason={selectedReason}
-            descriptionLoading={descriptionLoading}
-            isFavorite={selectedBook ? favorites.some((f) => f.book_id === selectedBook.book_id) : false}
-            onToggleFavorite={() => selectedBook && handleToggleFavorite(selectedBook)}
-            shelf={selectedBook ? shelfOf(journey, selectedBook.book_id) : null}
-            onMoveToShelf={(shelf) => selectedBook && handleMoveToShelf(selectedBook, shelf)}
-            onClose={handleClearSelection}
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block border-r border-line overflow-y-auto">
+        <Sidebar
+          active={activeNav}
+          onSelect={(label) => (label === "Log Out" ? handleLogOut() : setActiveNav(label))}
+        />
+      </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setMobileMenuOpen(false)}
           />
+          <div className="relative w-64 bg-card h-full shadow-2xl z-10 flex flex-col">
+            <Sidebar
+              active={activeNav}
+              onSelect={(label) => {
+                if (label === "Log Out") handleLogOut();
+                else setActiveNav(label);
+              }}
+              onCloseMobileMenu={() => setMobileMenuOpen(false)}
+            />
+          </div>
         </div>
       )}
 
-      <div className="border-r border-line overflow-y-auto">
-        <Sidebar active={activeNav} onSelect={(label) => label === "Log Out" ? handleLogOut() : setActiveNav(label)} />
-      </div>
-
-      <main className="overflow-y-auto px-8 py-6 space-y-8">
+      {/* Main Scrollable Content */}
+      <main className="overflow-y-auto px-4 sm:px-8 py-5 sm:py-6 space-y-6 sm:space-y-8">
         {activeNav === "Dashboard" && (
           <>
             <Hero name={userName ? userName.split(" ")[0] : ""} onShowLatest={handleShowLatest} />
@@ -425,6 +445,42 @@ export default function App() {
 
         {activeNav === "Help" && <HelpPage />}
       </main>
+
+      {/* Detail Panel Desktop (Column 3 on lg+) */}
+      {selectedBook && (
+        <div className="hidden lg:block bg-maroon-panel overflow-y-auto">
+          <DetailPanel
+            book={selectedBook}
+            reason={selectedReason}
+            descriptionLoading={descriptionLoading}
+            isFavorite={selectedBook ? favorites.some((f) => f.book_id === selectedBook.book_id) : false}
+            onToggleFavorite={() => selectedBook && handleToggleFavorite(selectedBook)}
+            shelf={selectedBook ? shelfOf(journey, selectedBook.book_id) : null}
+            onMoveToShelf={(shelf) => selectedBook && handleMoveToShelf(selectedBook, shelf)}
+            onClose={handleClearSelection}
+          />
+        </div>
+      )}
+
+      {/* Detail Panel Mobile / Tablet (Slide-up modal overlay on < lg) */}
+      {selectedBook && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 lg:hidden">
+          <div className="fixed inset-0" onClick={handleClearSelection} />
+          <div className="relative w-full max-w-lg bg-maroon-panel rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl z-10 animate-fade-in">
+            <DetailPanel
+              book={selectedBook}
+              reason={selectedReason}
+              descriptionLoading={descriptionLoading}
+              isFavorite={selectedBook ? favorites.some((f) => f.book_id === selectedBook.book_id) : false}
+              onToggleFavorite={() => selectedBook && handleToggleFavorite(selectedBook)}
+              shelf={selectedBook ? shelfOf(journey, selectedBook.book_id) : null}
+              onMoveToShelf={(shelf) => selectedBook && handleMoveToShelf(selectedBook, shelf)}
+              onClose={handleClearSelection}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

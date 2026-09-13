@@ -19,17 +19,22 @@ const SUB_LINKS = [
   { label: "Help", icon: HelpCircle },
 ];
 
-export default function Sidebar({ active, onSelect }) {
+export default function Sidebar({ active, onSelect, onCloseMobileMenu }) {
+  function handleSelect(label) {
+    onSelect(label);
+    if (onCloseMobileMenu) onCloseMobileMenu();
+  }
+
   return (
-    <aside className="flex flex-col justify-between h-full px-5 py-6">
+    <aside className="flex flex-col justify-between h-full px-5 py-6 bg-card">
       <nav className="flex flex-col gap-1">
         {MAIN_LINKS.map(({ label, icon: Icon }) => {
           const isActive = label === active;
           return (
             <button
               key={label}
-              onClick={() => onSelect(label)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+              onClick={() => handleSelect(label)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors cursor-pointer ${
                 isActive
                   ? "text-maroon font-semibold bg-maroon/[0.06]"
                   : "text-ink-muted hover:text-ink"
@@ -46,8 +51,8 @@ export default function Sidebar({ active, onSelect }) {
         {SUB_LINKS.map(({ label, icon: Icon }) => (
           <button
             key={label}
-            onClick={() => onSelect(label)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors"
+            onClick={() => handleSelect(label)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors cursor-pointer"
           >
             <Icon size={17} />
             {label}
@@ -56,8 +61,8 @@ export default function Sidebar({ active, onSelect }) {
       </nav>
 
       <button
-        onClick={() => onSelect("Log Out")}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors"
+        onClick={() => handleSelect("Log Out")}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left text-ink-muted hover:text-ink transition-colors cursor-pointer"
       >
         <LogOut size={17} />
         Log Out
