@@ -98,8 +98,16 @@ export async function getPopular(n = 6, genre = null, yearMin = null, yearMax = 
 
   // Genre filter
   if (genre && genre !== "all") {
-    const g = norm(genre).replace("-", " ");
-    filtered = filtered.filter((b) => norm(b.genres).includes(g) || norm(b.genres).includes(norm(genre)));
+    const genreList = String(genre).split(",").map((g) => norm(g).trim()).filter(Boolean);
+    if (genreList.length > 0) {
+      filtered = filtered.filter((b) => {
+        const bg = norm(b.genres);
+        return genreList.some((g) => {
+          const gSpaced = g.replace("-", " ");
+          return bg.includes(g) || bg.includes(gSpaced);
+        });
+      });
+    }
   }
 
   // Era filter
@@ -111,12 +119,7 @@ export async function getPopular(n = 6, genre = null, yearMin = null, yearMax = 
   }
 
   const results = filtered.slice(offset, offset + n);
-  if (results.length > 0) return results;
-
-  if (language && language !== "all") {
-    return catalog.filter((b) => norm(b.language) === norm(language)).slice(0, n);
-  }
-  return catalog.slice(0, n);
+  return results;
 }
 
 export async function getWorldwide(n = 24, genre = null, yearMin = null, yearMax = null, language = null, offset = 0) {
@@ -138,8 +141,16 @@ export async function getWorldwide(n = 24, genre = null, yearMin = null, yearMax
 
   // Genre filter
   if (genre && genre !== "all") {
-    const g = norm(genre).replace("-", " ");
-    filtered = filtered.filter((b) => norm(b.genres).includes(g) || norm(b.genres).includes(norm(genre)));
+    const genreList = String(genre).split(",").map((g) => norm(g).trim()).filter(Boolean);
+    if (genreList.length > 0) {
+      filtered = filtered.filter((b) => {
+        const bg = norm(b.genres);
+        return genreList.some((g) => {
+          const gSpaced = g.replace("-", " ");
+          return bg.includes(g) || bg.includes(gSpaced);
+        });
+      });
+    }
   }
 
   // Era filter
@@ -151,12 +162,7 @@ export async function getWorldwide(n = 24, genre = null, yearMin = null, yearMax
   }
 
   const page = filtered.slice(offset, offset + n);
-  if (page.length > 0) return page;
-
-  if (language && language !== "all") {
-    return catalog.filter((b) => norm(b.language) === norm(language)).slice(0, n);
-  }
-  return catalog.slice(0, n);
+  return page;
 }
 
 export async function getPersonalized(genres = null, vibe = null, n = 30) {

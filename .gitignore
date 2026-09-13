@@ -1,5 +1,5 @@
 # Database & Processed Data (Exceeds GitHub 100MB file limit)
-data/
+/data/
 *.db
 *.db-journal
 *.sqlite

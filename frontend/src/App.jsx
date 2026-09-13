@@ -89,7 +89,7 @@ export default function App() {
   // When opening the website, show all books by default
   useEffect(() => {
     setStatus("loading");
-    getPopular(5000)
+    getPopular(15000)
       .then((books) => {
         const list = books || [];
         setAllBooks(list);
