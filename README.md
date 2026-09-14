@@ -1,6 +1,6 @@
 # BookWise: Book Recommendation System
 
-A full-stack book discovery and recommendation platform. BookWise integrates collaborative filtering, content-based natural language processing, and a high-performance SQLite database indexing over 2.36 million books from the UCSD Goodreads Book Graph and Kaggle Goodreads datasets.
+A full-stack book discovery and recommendation platform. BookWise integrates collaborative filtering, content-based natural language processing, and a high-performance SQLite database.
 
 ---
 
