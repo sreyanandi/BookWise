@@ -20,22 +20,9 @@ The system provides multiple discovery pathways:
 
 ## 2. Demo / Screenshots
 
-```
-+---------------------------------------------------------------------------------------+
-|  BookWise Dashboard                                          [ Search Catalog... ]    |
-+---------------------------------------------------------------------------------------+
-| [Overview]        Personalized Recommendations                                        |
-| [Category]        ----------------------------------------------------------------    |
-| [Discover]        [ Book Cover ]   [ Book Cover ]   [ Book Cover ]   [ Book Cover ]   |
-| [Mood]            Dune             Neuromancer      Foundation       Snow Crash       |
-| [Quiz]            Frank Herbert    William Gibson   Isaac Asimov     Neal Stephenson  |
-| [Journey]         Rating: 4.25     Rating: 3.90     Rating: 4.17     Rating: 4.03     |
-| [Analytics]                                                                           |
-|                   Trending in Sci-Fi & Fantasy                                        |
-|                   ----------------------------------------------------------------    |
-|                   [ Book Cover ]   [ Book Cover ]   [ Book Cover ]   [ Book Cover ]   |
-+---------------------------------------------------------------------------------------+
-```
+<img width="1917" height="907" alt="image" src="https://github.com/user-attachments/assets/0016faee-75a4-4d0d-859d-bde3eb98bcd4" />
+<img width="1917" height="908" alt="image" src="https://github.com/user-attachments/assets/8d15e809-50ec-40bf-ba5c-0745d7851a9d" />
+
 
 Visual representations of the user interface:
 - **Landing Page**: Product introduction, live trending book carousel, and catalog entry point (`frontend/src/pages/LandingPage.jsx`).
