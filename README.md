@@ -583,7 +583,7 @@ curl -X GET "http://localhost:8000/popular?genre=fantasy&language=english&year_m
 
 ---
 
-## 22. Results
+## 21. Results
 
 - **Scale of Indexed Knowledge**: 2,360,000+ distinct titles unified from disparate sources into a single 7.3 GB SQLite database with full-text FTS5 search capabilities.
 - **Predictive Accuracy**: PyTorch Matrix Factorization converged to an RMSE of 0.838 stars on 5.97 million real-world interaction records.
@@ -593,7 +593,7 @@ curl -X GET "http://localhost:8000/popular?genre=fantasy&language=english&year_m
 
 ---
 
-## 23. Future Improvements
+## 22. Future Improvements
 
 - **Transformer Dense Embeddings**: Integrate Sentence-BERT or multilingual transformer embeddings (e.g., `all-MiniLM-L6-v2`) via Vectorlite or FAISS for deep semantic vector search.
 - **Real-Time Contextual Bandits**: Implement multi-armed bandit algorithms to adapt recommendation weights in response to client-side dwell time and click-through signals.
@@ -602,7 +602,7 @@ curl -X GET "http://localhost:8000/popular?genre=fantasy&language=english&year_m
 
 ---
 
-## 24. Challenges & Solutions
+## 23. Challenges & Solutions
 
 ### Challenge 1: Excessive File Sizes Exceeding Git & Host Limits
 - **Problem**: The unified SQLite database (`books.db`) is 7.3 GB, and raw UCSD datasets exceed 1.2 GB compressed, far surpassing GitHub's 100 MB file limit.
@@ -622,7 +622,7 @@ curl -X GET "http://localhost:8000/popular?genre=fantasy&language=english&year_m
 
 ---
 
-## 25. Learning Outcomes
+## 24. Learning Outcomes
 
 - Engineering hybrid recommendation systems combining explicit interaction matrices and natural language text features.
 - High-performance relational schema and full-text search design for multi-gigabyte text datasets in SQLite.
@@ -632,13 +632,9 @@ curl -X GET "http://localhost:8000/popular?genre=fantasy&language=english&year_m
 
 ---
 
-## 26. Contributors
+## 25. Contributors
 
 - **Sreya Nandi** - Core architecture, data pipeline engineering, model development, API design, and frontend implementation.
 - Open-source dataset contributors from the UCSD Goodreads Research Group and Kaggle Book communities.
 
 ---
-
-## 27. License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for complete details.
