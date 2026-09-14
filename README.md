@@ -21,7 +21,11 @@ The system provides multiple discovery pathways:
 ## 2. Demo / Screenshots
 
 <img width="1917" height="907" alt="image" src="https://github.com/user-attachments/assets/0016faee-75a4-4d0d-859d-bde3eb98bcd4" />
+
 <img width="1917" height="908" alt="image" src="https://github.com/user-attachments/assets/8d15e809-50ec-40bf-ba5c-0745d7851a9d" />
+
+<img width="1917" height="902" alt="image" src="https://github.com/user-attachments/assets/38425caf-b2d4-404f-a31f-376a00199148" />
+
 
 
 Visual representations of the user interface:
