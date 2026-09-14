@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import Hero from "./components/Hero";
@@ -67,6 +67,8 @@ export default function App() {
 
   const [allBooks, setAllBooks] = useState([]);
   const [popular, setPopular] = useState([]);
+  const defaultBooksRef = useRef([]);
+  const defaultPopularRef = useRef([]);
   const [recommended, setRecommended] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [selectedReason, setSelectedReason] = useState(null);
@@ -92,6 +94,8 @@ export default function App() {
     getPopular(15000)
       .then((books) => {
         const list = books || [];
+        defaultBooksRef.current = list;
+        defaultPopularRef.current = list.slice(0, 16);
         setAllBooks(list);
         setPopular(list.slice(0, 16));
         setStatus("done");
@@ -149,6 +153,22 @@ export default function App() {
     setRecommended([]);
     setIsShowingLatest(false);
     setVisibleCount(36);
+    if (defaultBooksRef.current.length > 0) {
+      setAllBooks(defaultBooksRef.current);
+      setPopular(defaultPopularRef.current);
+    } else {
+      setStatus("loading");
+      getPopular(15000)
+        .then((books) => {
+          const list = books || [];
+          defaultBooksRef.current = list;
+          defaultPopularRef.current = list.slice(0, 16);
+          setAllBooks(list);
+          setPopular(list.slice(0, 16));
+          setStatus("done");
+        })
+        .catch(() => setStatus("done"));
+    }
   }
 
   function handleEnter() {
